@@ -491,7 +491,7 @@ prevents the bona-fide region from forming. Augmentation is disabled at evaluati
 \end{algorithm}
 
 \noindent\textbf{Training.} Algorithm~\ref{alg:training} summarizes one epoch. Only
-$\approx$4.6M of 321M total parameters receive gradients (Table~\ref{tab:budget});
+4.49M of 319.99M total parameters receive gradients (Table~\ref{tab:budget});
 activations of the frozen encoder are gradient-checkpointed so the model trains on a
 single 24~GB GPU.
 

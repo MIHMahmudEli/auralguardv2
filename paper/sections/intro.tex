@@ -61,9 +61,12 @@ Recent large audio-language models (ALLMs) such as Qwen2-Audio~\cite{chu2024qwen
 and SALMONN~\cite{tang2024salmonn} raise a natural question: does the general-purpose
 audio understanding of foundation models subsume the deepfake-detection task? Early
 evidence suggests not---prompted zero-shot, ALLMs perform near chance at distinguishing
-bona-fide from synthetic speech~\cite{gong2025allm4add}---but no prior work has placed
-ALLMs and specialized countermeasures side by side within a controlled cross-domain,
-channel-robustness, and calibration protocol. We do so here.
+bona-fide from synthetic speech~\cite{gong2025allm4add}. This stems from their objective:
+general audio models compress acoustic semantics while abstracting away the low-level
+phase jitter and vocoder artifacts essential for forensic verification. A comprehensive
+study placing speech foundation representations alongside multiple generations of
+specialized countermeasures under controlled cross-domain, channel-robustness, and
+calibration protocols remains an urgent priority. We undertake this evaluation here.
 
 This paper reframes synthetic-speech detection from closed-set binary classification to
 \emph{open-set, channel-robust, calibrated} detection, and proposes

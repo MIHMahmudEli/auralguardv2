@@ -115,11 +115,11 @@ obsolete. Current evidence indicates the opposite: ALLM4ADD~\cite{gong2025allm4a
 reports that leading ALLMs prompted zero-shot perform close to chance on deepfake
 detection, and only approach competitive accuracy after task-specific supervised
 fine-tuning that reframes detection as audio question answering. However, published
-comparisons evaluate ALLMs on single corpora under clean conditions. Our protocol is,
-to our knowledge, the first to place zero-shot ALLM prompting alongside four
-generations of specialized countermeasures under identical cross-domain,
-channel-distorted, and calibration-aware evaluation, quantifying precisely where the
-foundation-model generality does and does not help.
+evaluations analyze ALLMs primarily on single in-domain corpora. In contrast, our study
+rigorously benchmarks self-supervised foundation speech representations (WavLM-Large)
+alongside multiple generations of specialized acoustic countermeasures across held-out
+in-domain and zero-shot cross-corpus shifts, quantifying precisely where foundation-level
+invariance succeeds and where explicit physical artifact modeling remains indispensable.
 
 \subsection{Positioning}
 \label{ssec:related-positioning}

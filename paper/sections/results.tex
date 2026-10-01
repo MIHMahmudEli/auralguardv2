@@ -253,13 +253,13 @@ Under strictly controlled training on ASVspoof~2019~LA without target-domain ada
 \begin{enumerate}
     \item Our retrained B1 (50.62\%) and B2 (38.08\%) baselines closely reproduce the empirical failure rates originally documented by M{\"u}ller et al.~\cite{muller2022inthewild} (48.20\% and 33.90\%), confirming protocol integrity.
     \item Our foundation-model systems (B5 at 16.55\% and AuralGuard v2 at 19.19\%) outperform published W2V2+AASIST baselines (25.40\%) by 6 to 9 percentage points.
-    \item While highly specialized recent architectures such as Nes2Net~\cite{liu2025nes2net} and XLSR-Mamba~\cite{xiao2025xlsrmamba} achieve lower EER through complete end-to-end fine-tuning of 300M+ parameters with heavy augmentations, AuralGuard keeps the foundation model completely \emph{frozen}, training only 4.6M adapter parameters. This delivers competitive zero-shot discrimination while securing the best probability calibration documented to date.
+    \item While highly specialized recent architectures such as Nes2Net~\cite{liu2025nes2net} and XLSR-Mamba~\cite{xiao2025xlsrmamba} achieve lower EER through complete end-to-end fine-tuning of 300M+ parameters with heavy augmentations, AuralGuard keeps the foundation model completely \emph{frozen}, training only 4.49M adapter parameters (1.4\% capacity). This delivers competitive zero-shot discrimination while securing the best probability calibration documented to date.
 \end{enumerate}
 
 \subsection{Computational and Parameter Budget Analysis}
 \label{ssec:budget-analysis}
 
-As detailed in Table~\ref{tab:budget} (Section~\ref{ssec:budget}), AuralGuard maintains a modest trainable footprint of only 4.50M parameters (1.4\% of the total 319.95M parameters), with the 315.45M parameters of WavLM-Large remaining completely frozen during optimization. This architectural decision yields two substantial practical advantages:
+As detailed in Table~\ref{tab:budget} (Section~\ref{ssec:budget}), AuralGuard maintains a modest trainable footprint of only 4.49M parameters (1.4\% of the total 319.99M parameters), with the 315.5M parameters of WavLM-Large remaining completely frozen during optimization. This architectural decision yields two substantial practical advantages:
 \begin{itemize}
     \item \textbf{Training and Memory Efficiency:} By checkpointing activations from the frozen WavLM-Large backbone, AuralGuard requires less than 19~GB of peak VRAM during training, enabling full model execution on a single commodity 24~GB GPU (e.g., NVIDIA RTX~3090/4090 or Tesla~T4 cluster nodes).
     \item \textbf{Inference Speed and Deployment:} At inference, AuralGuard processes a 4-second audio segment in 232~ms on GPU (real-time factor $\mathrm{RTF} = 0.058$, over $17\times$ faster than real time) and 1.65~seconds on an 8-core CPU ($\mathrm{RTF} = 0.412$, over $2.4\times$ faster than real time). This operating speed satisfies stringent real-time requirements for automated call-center verification, social-media content moderation, and real-time biometric defense.
