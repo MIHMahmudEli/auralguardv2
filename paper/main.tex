@@ -1,0 +1,100 @@
+\documentclass[journal]{IEEEtran}
+
+% =====================================================================
+% AuralGuard — IEEE Transactions on Information Forensics and Security /
+% Computer Speech & Language Journal Manuscript.
+% =====================================================================
+
+\usepackage{graphicx,booktabs,multirow,makecell,amsmath,amssymb,url,hyperref}
+\usepackage[ruled,linesnumbered]{algorithm2e}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.geometric}
+\usepackage[capitalize]{cleveref}
+
+% ---- Styles for the AuralGuard architecture figures ----
+\tikzset{
+  block/.style={draw,rounded corners=2pt,align=center,inner sep=3pt,
+                font=\scriptsize,minimum height=6.5mm,fill=white,line width=0.4pt},
+  viewa/.style={block,fill=blue!8,draw=blue!55},
+  viewb/.style={block,fill=orange!10,draw=orange!65},
+  fuse/.style ={block,fill=teal!12,draw=teal!60},
+  back/.style ={block,fill=violet!10,draw=violet!60},
+  head/.style ={block,fill=green!10,draw=green!55!black},
+  io/.style   ={block,fill=gray!12,draw=gray!60,rounded corners=6pt},
+  loss/.style ={block,fill=red!8,draw=red!55,font=\scriptsize},
+  aug/.style  ={block,fill=yellow!15,draw=yellow!60!black},
+  op/.style   ={draw,circle,inner sep=1pt,font=\scriptsize,fill=white,line width=0.4pt},
+  grp/.style  ={rounded corners=4pt,inner sep=5pt,line width=0.5pt},
+  flow/.style ={-{Stealth[length=2mm]},line width=0.5pt},
+  tflow/.style={-{Stealth[length=2mm]},line width=0.5pt,dashed,red!60!black},
+}
+
+\title{AuralGuard: Multi-View One-Class Learning for Generalizable and
+Calibrated Detection of AI-Generated Speech in the Wild}
+
+\author{Mohsin~Ibna~Hossain,
+        Md.~Muttakin,
+        Sadman~Hasan~Miraj,
+        and~Mohammad~Mahmudul~Hasan%
+\thanks{Mohsin Ibna Hossain, Md. Muttakin, and Sadman Hasan Miraj are with the Department of Computer Science, American International University-Bangladesh (AIUB), Dhaka 1229, Bangladesh (e-mail: 23-50194-1@student.aiub.edu; 23-50987-1@student.aiub.edu; 23-50380-1@student.aiub.edu).}%
+\thanks{Mohammad Mahmudul Hasan is with the Department of Computer Science, American International University-Bangladesh (AIUB), Dhaka 1229, Bangladesh (e-mail: m.hasan@aiub.edu).}%
+\thanks{Corresponding author: Mohammad Mahmudul Hasan.}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The rapid proliferation of neural speech synthesis, voice conversion, and neural codec language models has generated synthetic audio that human listeners and traditional detection systems struggle to differentiate from genuine human speech. While state-of-the-art countermeasures achieve competitive equal error rates (EER) on constrained in-domain benchmarks, their performance degrades significantly when confronted with unseen generative models and unconstrained acoustic environments, while their decision scores are often severely miscalibrated for high-stakes forensic deployment. We present \textbf{AuralGuard}, an open-set multi-view deepfake detection framework that synergistically integrates: (i)~a self-supervised foundation-model front-end based on WavLM with learnable layer-wise attention to capture multi-depth acoustic representations, (ii)~a complementary vocoder-artifact branch capturing linear-frequency cepstral, modified group-delay, and constant-Q phase dynamics, and (iii)~a spectro-temporal graph-attention back-end, optimized under an Orthogonal Centroid Scoring (OCS) one-class objective. Evaluated under a rigorous train-once (ASVspoof~2019~LA) evaluate-everywhere protocol across held-out in-domain and diverse out-of-domain benchmarks, AuralGuard demonstrates strong zero-shot generalization and superior probability calibration. On the unconstrained In-the-Wild benchmark, AuralGuard achieves an EER of 19.19\% (v2) while delivering an exceptional Expected Calibration Error (ECE) of 0.0965 (v1) and 0.1716 (v2), markedly outperforming both legacy acoustic models (ECE $>$ 0.55) and single-view foundation-model baselines (ECE = 0.2320). On the challenging multi-vocoder WaveFake benchmark, AuralGuard v2 achieves the lowest EER of 45.19\% among all evaluated architectures. These empirical findings underscore the indispensable role of multi-view artifact modeling and one-class formulation in ensuring calibrated, trustworthy audio deepfake countermeasures.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Audio deepfake detection, anti-spoofing, synthetic speech, speech foundation models,
+self-supervised learning, one-class classification, model calibration, generalization.
+\end{IEEEkeywords}
+
+\section{Introduction}
+\label{sec:intro}
+\input{sections/intro}
+
+\section{Related Work}
+\label{sec:related}
+\input{sections/related}
+
+\section{Proposed Method}
+\label{sec:method}
+\input{sections/method}
+
+\section{Experimental Setup}
+\label{sec:setup}
+\input{sections/setup}
+
+\section{Results and Analysis}
+\label{sec:results}
+\input{sections/results}
+
+\section{Discussion, Limitations, and Ethics}
+\label{sec:discussion}
+\input{sections/discussion}
+
+\section{Conclusion}
+\label{sec:conclusion}
+\input{sections/conclusion}
+
+\section*{Acknowledgments}
+The authors express their gratitude to the Department of Computer Science at American International University-Bangladesh (AIUB) for institutional support and computational resources. We also acknowledge the open-source speech forensics community and the organizers of the ASVspoof challenges for curating public benchmarks.
+
+\section*{Data and Code Availability}
+All datasets used in this study (ASVspoof 2019 LA, In-the-Wild, and WaveFake) are publicly available research corpora distributed under their respective research licenses. Complete source code, configuration files, and evaluation scripts are publicly available on GitHub at \url{https://github.com/MIHMahmudEli/auralguardv2}. Trained model checkpoint weights, evaluation manifests, and reproducible artifact logs are openly hosted at Hugging Face: \url{https://huggingface.co/MoshinAli/auralguard-checkpoints}.
+
+\section*{CRediT Author Statement}
+\textbf{Mohsin Ibna Hossain:} Conceptualization, Methodology, Software, Formal analysis, Investigation, Data Curation, Writing---original draft.
+\textbf{Md.~Muttakin:} Software, Validation, Data curation, Investigation, Visualization, Writing---review \& editing.
+\textbf{Sadman Hasan Miraj:} Software, Validation, Investigation, Resources, Writing---review \& editing.
+\textbf{Mohammad Mahmudul Hasan:} Conceptualization, Methodology, Supervision, Project administration, Resources, Writing---review \& editing.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+
+
+\end{document}

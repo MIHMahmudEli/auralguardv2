@@ -1,0 +1,123 @@
+% ---------------------------------------------------------------------
+% Experimental Setup (~2 pages). Counts in tab:datasets are from the
+% markers flag values to re-check or replace.
+% ---------------------------------------------------------------------
+
+\subsection{Datasets and Protocol}
+\label{ssec:datasets}
+
+Table~\ref{tab:datasets} summarizes the seven corpora in our benchmark. We follow a
+strict \emph{train-once, evaluate-everywhere} protocol: all trainable systems are
+trained exclusively on the ASVspoof~2019~LA training partition (plus our augmentation
+curriculum, which uses no additional speech data) and model selection uses only its
+development partition. The 2019~LA evaluation set serves as the in-domain test; the six
+remaining corpora are evaluated \emph{zero-shot}---their synthesis algorithms,
+speakers, languages, recording conditions, and channels are never seen in training.
+This protocol isolates generalization, the property that in-domain leaderboards fail to
+measure~\cite{muller2022inthewild,muller2024harder}.
+
+\begin{table}[t]
+\centering
+\caption{Benchmark evaluation corpora grouped by protocol role and evaluation objective.}
+\label{tab:datasets}
+\setlength{\tabcolsep}{3pt}
+\footnotesize
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lllcr}
+\toprule
+Dataset & Role & Focus / Artifact Type & Utts. (Spoof / Total) & Lang. \\
+\midrule
+ASVspoof 2019 LA Train~\cite{wang2020asvspoof2019} & Training   & Known TTS/VC algorithms  & 22,800 / 25,380   & EN \\
+ASVspoof 2019 LA Dev~\cite{wang2020asvspoof2019}   & Validation & Threshold tuning         & 22,296 / 24,844   & EN \\
+ASVspoof 2019 LA Eval~\cite{wang2020asvspoof2019}  & In-domain  & Unseen known-family A07--A19 & 63,882 / 71,237   & EN \\
+In-the-Wild~\cite{muller2022inthewild}             & Zero-shot  & Real-world found web audio & 11,816 / 31,779   & EN \\
+WaveFake~\cite{frank2021wavefake}                  & Zero-shot  & Multi-vocoder neural synthesis & 117,985 / 134,097 & EN, JA \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\subsection{Baselines}
+\label{ssec:baselines}
+
+We evaluate AuralGuard against five established countermeasure systems spanning four architectural generations, all retrained under our strict controlled protocol:
+
+\begin{itemize}
+    \item \textbf{B1 --- LFCC-LCNN}~\cite{lavrentyeva2019stc}: Linear Frequency Cepstral Coefficients (60-dim with $\Delta,\Delta\Delta$) paired with a Max-Feature-Map Light CNN architecture (Generation~1--2 reference).
+    \item \textbf{B2 --- RawNet2}~\cite{tak2021rawnet2}: End-to-end raw-waveform network utilizing parameterized sinc-convolutional filterbanks and residual feature aggregation (Generation~2 reference).
+    \item \textbf{B3 --- AASIST}~\cite{jung2022aasist}: Integrated spectro-temporal graph attention network with heterogeneous graph convolution over raw speech waveforms.
+    \item \textbf{B5 --- WavLM+AASIST+OCS}: Pre-trained WavLM-Large backbone coupled with an AASIST graph-attention back-end and trained under Orthogonal Centroid Scoring (OCS) loss. This serves as the direct single-view foundation-model ablation anchor.
+    \item \textbf{AuralGuard (v1)}: The proposed multi-view architecture combining WavLM layer-attention with the vocoder-artifact branch and OCS loss, trained with the standard curriculum (converged at Epoch~16).
+    \item \textbf{AuralGuard v2}: Refined multi-view architecture incorporating early unfreezing and stabilized artifact optimization curriculum (evaluated at Epoch~5).
+\end{itemize}
+
+\subsection{Implementation Details}
+\label{ssec:implementation}
+
+\begin{table}[t]
+\centering
+\caption{Training hyperparameters (selected on the ASVspoof~2019~LA dev set).}
+\label{tab:hyper}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{ll}
+\toprule
+Hyperparameter & Value \\
+\midrule
+Input length / sample rate & 4~s (64,000 samples) / 16~kHz \\
+SSL encoder & WavLM-Large, frozen, $L{=}25$, $D{=}1024$ \\
+Common channel dim.\ $C$ / embedding $d$ & 128 / 160 \\
+Optimizer & AdamW~\cite{loshchilov2019adamw}, wd $10^{-4}$ \\
+LR (new modules / schedule) & $10^{-4}$, cosine, 2-epoch warmup \\
+Epochs / batch size & 40 / 24 \\
+OC-Softmax $(s_0, m_0, m_1)$ & $(20, 0.9, 0.2)$ \\
+SupCon $(\lambda_c, \tau_c)$ & $(0.5, 0.1)$ \\
+Entropy reg.\ $\lambda_r$ & 0.01 \\
+Augmentation $p_{\text{aug}}$ / curriculum & 0.7 / 10-epoch anneal \\
+Seeds & 3 (report mean $\pm$ 95\% CI) \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+Table~\ref{tab:hyper} lists hyperparameters. All audio is resampled to 16~kHz mono and
+cropped or padded to 4~s. The WavLM-Large front-end is frozen; layer-attention weights,
+the View-B CNN, fusion, back-end, and heads receive gradients ($\approx$4.6M
+parameters). Gradient checkpointing of the frozen encoder keeps peak memory below
+19~GB, enabling training on a single 24~GB GPU (RTX~3090); one run takes
+$\approx$31~hours. Every experiment is repeated with three random seeds and we report
+means with bootstrap confidence intervals. Baselines B1--B5 are retrained with
+identical data, augmentation, seeds, and selection criteria to guarantee a controlled
+comparison; B6 uses the authors' released recipe under our protocol; B7 numbers are
+quoted from the original publication; B8 requires no training.
+
+\subsection{Evaluation Metrics and Statistical Significance}
+\label{ssec:metrics}
+
+To thoroughly quantify discrimination, clinical security cost, and forensic calibration, we report a unified suite of evaluation metrics:
+
+\noindent\textbf{Equal Error Rate (EER).} For a decision threshold $\tau$, let the False Alarm Rate (FAR, classifying synthetic speech as bona fide) and False Rejection Rate (FRR, rejecting genuine human speech) be defined over evaluation partitions $\mathcal{D}_{\text{spoof}}$ and $\mathcal{D}_{\text{bonafide}}$ as:
+\begin{align}
+P_{\text{fa}}(\tau) &= \frac{1}{|\mathcal{D}_{\text{spoof}}|} \sum_{i \in \mathcal{D}_{\text{spoof}}} \mathbb{I}(s_i < \tau), \label{eq:far_frr} \\
+P_{\text{miss}}(\tau) &= \frac{1}{|\mathcal{D}_{\text{bonafide}}|} \sum_{i \in \mathcal{D}_{\text{bonafide}}} \mathbb{I}(s_i \ge \tau), \notag
+\end{align}
+where $s_i = -\cos\theta_i$ is the uncalibrated anomaly score. The Equal Error Rate ($\mathrm{EER}$) corresponds to the unique operating point $\tau^*$ where false alarms and false rejections balance: $\mathrm{EER} \equiv P_{\text{fa}}(\tau^*) = P_{\text{miss}}(\tau^*)$.
+
+\noindent\textbf{Minimum Tandem Detection Cost Function (min t-DCF).} Standard biometric authentication pairs an automated speaker verification (ASV) system with a countermeasure (CM) system. We evaluate tandem performance using the normalized ASVspoof metric~\cite{kinnunen2020tdcf}:
+\begin{equation}
+\mathrm{t\text{-}DCF}(\tau) = C_0 + C_1 P_{\text{miss}}(\tau) + C_2 P_{\text{fa}}(\tau),
+\label{eq:tdcf}
+\end{equation}
+where the coefficients $C_0, C_1, C_2$ are defined by official NIST/ASVspoof prior probabilities ($\pi_{\text{tar}} = 0.9405, \pi_{\text{non}} = 0.0095, \pi_{\text{spoof}} = 0.05$) and cost weights ($C_{\text{miss}} = 1, C_{\text{fa}} = 10$). We report the normalized minimum cost $\min_\tau \mathrm{t\text{-}DCF}(\tau)$ obtained over all operating thresholds.
+
+\noindent\textbf{Area Under the ROC Curve (AUROC) and Balanced Accuracy.} To assess threshold-independent discriminatory power, we compute $\mathrm{AUROC} = \int_0^1 (1 - P_{\text{miss}}(\tau(p))) \, dp$. We also report the maximum Balanced Accuracy ($\mathrm{Bal. Acc.} = \frac{1}{2}(1 - P_{\text{fa}}(\tau^*) + 1 - P_{\text{miss}}(\tau^*))$) and Macro-F1 score.
+
+\noindent\textbf{Expected Calibration Error (ECE) and Brier Score.} In legal forensics, reported probabilities must align with true empirical error rates. Given predicted probabilities $p_i \in [0, 1]$ partitioned into $M=15$ equal-mass confidence bins $B_m$, the ECE and Brier score are formulated as~\cite{guo2017calibration}:
+\begin{align}
+\mathrm{ECE} &= \sum_{m=1}^{M} \frac{|B_m|}{N} \left| \mathrm{acc}(B_m) - \mathrm{conf}(B_m) \right|, \label{eq:ece} \\
+\mathrm{Brier} &= \frac{1}{N} \sum_{i=1}^N (p_i - y_i)^2, \notag
+\end{align}
+where $\mathrm{conf}(B_m) = \frac{1}{|B_m|}\sum_{i \in B_m} p_i$ and $\mathrm{acc}(B_m) = \frac{1}{|B_m|}\sum_{i \in B_m} \mathbb{I}(\hat{y}_i = y_i)$.
+
+\noindent\textbf{Statistical Uncertainty via Bootstrap Resampling.} To avoid reporting point estimates without uncertainty, all metrics are accompanied by 95\% bootstrap confidence intervals derived from $B=1,000$ independent resamples with replacement over the evaluation sets. For any metric $\mathcal{M}$, the empirical distribution of resampled estimates $\hat{\mathcal{M}}^{*(1)}, \dots, \hat{\mathcal{M}}^{*(B)}$ yields the non-parametric percentile confidence interval $[\hat{\mathcal{M}}_{0.025}^*, \hat{\mathcal{M}}_{0.975}^*]$. Statistical significance between competing systems is evaluated using paired bootstrap difference tests with a rejection threshold of $p < 0.01$.

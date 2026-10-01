@@ -1,0 +1,80 @@
+# Data & artifacts (never commit audio / weights)
+data/raw/
+data/processed/
+data/features_cache/
+*.wav
+*.flac
+*.mp3
+*.ogg
+*.m4a
+*.ckpt
+*.pt
+*.onnx
+experiments/*/checkpoints/
+experiments/*/logs/
+wandb/
+lightning_logs/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.env
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Non-publication folders (demo UI, deployments, debug notebooks)
+ui/
+deployment/
+notebooks/
+data/test_samples/
+
+# Local assistant/session config & temporary scratch
+.claude/
+scratch/
+tmp_*/
+tmp_*
+*.log
+tasks_updated.json
+.kaggle_kernel/
+
+# Worker cluster scripts & internal credentials
+scripts/deploy_workers.py
+scripts/create_worker_notebook.py
+scripts/test_resume.py
+docs/KAGGLE_WORKER_GUIDE.md
+docs/RESEARCH_PLAN.md
+docs/ROADMAP.md
+notebooks/kaggle_smart_worker.ipynb
+KAGGLE.md
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# LaTeX build artifacts
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
+paper/*.lof
+paper/*.lot
+paper/*.toc
+
+# Keep camera-ready PDF, manifests and small figures
+!paper/main.pdf
+!data/manifests/
+!paper/figures/*.pdf

@@ -1,0 +1,37 @@
+# @package train
+epochs: 50
+batch_size: 24
+grad_accum: 1
+optimizer:
+  name: adamw
+  lr: 1.0e-4
+  ssl_lr: 1.0e-6            # smaller LR for fine-tuned SSL layers
+  artifact_lr: 1.0e-5       # LR for artifact frontend + fusion (between ssl_lr and lr)
+  weight_decay: 1.0e-4
+scheduler:
+  name: cosine
+  warmup_epochs: 2
+  min_lr: 1.0e-7
+grad_clip: 5.0
+amp: true                    # mixed precision
+grad_checkpointing: true     # fit 24 GB GPU with SSL fine-tuning
+artifact_unfreeze_epoch: 5   # freeze ArtifactFrontend for first N epochs, then unfreeze
+early_stop:
+  metric: dev_eer            # minimize
+  patience: 8
+checkpoint:
+  monitor: dev_eer
+  mode: min
+  save_top_k: 1
+log_every_n_steps: 50
+val_every_n_epochs: 1
+logger: tensorboard          # tensorboard | wandb | none
+hf_upload:
+  enabled: false             # set true to upload checkpoints to HF Hub during training
+  repo: null                 # e.g. "MoshinAli/auralguard-checkpoints"
+  token: null                # HF token; if null, reads from HF_TOKEN env var
+  upload_every_n_epochs: 1   # upload every N epochs (best.ckpt always uploaded)
+sanity_check:
+  enabled: true              # quarantine suspect epochs instead of overwriting last.ckpt
+  dev_eer_threshold: 0.95    # flag dev_eer >= this value as suspect (NaN always flagged)
+  max_consecutive_suspect: 3 # stop training after N suspect epochs even after rollback

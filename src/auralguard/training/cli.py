@@ -1,0 +1,131 @@
+"""`auralguard-train` console entrypoint (thin wrapper over scripts/train.py logic)."""
+
+from __future__ import annotations
+
+import hydra
+from omegaconf import DictConfig, OmegaConf
+
+from ..data import AudioAntiSpoofDataset, AudioConfig, AugmentPipeline
+from ..models import build_model
+from ..utils import get_logger, seed_everything
+from .trainer import Trainer
+
+logger = get_logger(__name__)
+
+
+def run(cfg: DictConfig):
+    seed_everything(cfg.seed)
+    data = cfg.data
+    audio_cfg = AudioConfig(
+        sample_rate=data.sample_rate, crop_seconds=data.crop_seconds,
+        random_crop=data.random_crop, pad_mode=data.pad_mode,
+    )
+    aug = AugmentPipeline(data.augment) if data.augment.get("enabled", False) else None
+    train_ds = AudioAntiSpoofDataset(data.manifests.train, audio_cfg, augment=aug, is_train=True)
+    dev_ds = AudioAntiSpoofDataset(data.manifests.dev, audio_cfg, augment=None, is_train=False)
+
+    model_cfg = OmegaConf.to_container(cfg.model, resolve=True)
+    model_cfg["grad_checkpointing"] = cfg.train.get("grad_checkpointing", False)
+    model = build_model(model_cfg)
+
+    # Inject HF token from env if not in config
+    import os
+    hf_cfg = cfg.train.get("hf_upload", {})
+    if hf_cfg.get("enabled", False) and hf_cfg.get("token") is None:
+        token = None
+        # Try Kaggle Secrets
+        try:
+            from kaggle_secrets import UserSecretsClient
+            secrets = UserSecretsClient()
+            token = secrets.get_secret("HF_TOKEN")
+            logger.info("Loaded HF token from Kaggle Secrets")
+        except Exception:
+            pass
+        # Try env vars
+        if not token:
+            token = os.environ.get("HF_TOKEN") or os.environ.get("HF")
+        # Try .env file — look for HF_TOKEN= first, then HF= (legacy key)
+        if not token:
+            from pathlib import Path
+            env_file = Path("auralguard/.env") if Path("auralguard/.env").exists() else Path(".env")
+            if env_file.exists():
+                for line in env_file.read_text().splitlines():
+                    if line.startswith("HF_TOKEN="):
+                        token = line.split("=", 1)[1].strip()
+                        break
+                    if line.startswith("HF="):
+                        token = line.split("=", 1)[1].strip()
+                        # don't break — HF_TOKEN= may still appear later
+        OmegaConf.update(cfg, "train.hf_upload.token", token, force_add=True)
+
+    trainer = Trainer(model, train_ds, dev_ds, cfg, device=cfg.device)
+
+    # Resume from checkpoint if it exists
+    import torch, sys, types
+    from pathlib import Path
+    class _FakeObj:
+        def __getattr__(self, n): return _FakeObj()
+        def __call__(self, *a, **kw): return _FakeObj()
+        def __bool__(self): return False
+    class _FakeSerializationMod(types.ModuleType):
+        def __getattr__(self, name): return _FakeObj()
+    sys.modules['torch.utils.serialization'] = _FakeSerializationMod('torch.utils.serialization')
+    out_dir = Path(cfg["output_dir"])
+    last_ckpt = out_dir / "checkpoints" / "last.ckpt"
+    best_ckpt = out_dir / "checkpoints" / "best.ckpt"
+    resume_ckpt = last_ckpt if last_ckpt.exists() else best_ckpt if best_ckpt.exists() else None
+    start_epoch = 0
+    if resume_ckpt is not None:
+        ckpt = torch.load(str(resume_ckpt), map_location="cpu", weights_only=False)
+        model.load_state_dict(ckpt["model"])
+        start_epoch = ckpt.get("epoch", -1) + 1
+
+        # Restore optimizer state from resume_ckpt (not best_ckpt)
+        if "optimizer" in ckpt:
+            trainer.optimizer.load_state_dict(ckpt["optimizer"])
+        else:
+            logger.warning("checkpoint lacks optimizer state; starting Adam fresh")
+        if "scaler" in ckpt:
+            trainer.scaler.load_state_dict(ckpt["scaler"])
+        else:
+            logger.warning("checkpoint lacks scaler state; starting AMP scaler fresh")
+
+        # Bug 1 fix: best_eer always from best.ckpt, not resume_ckpt
+        if best_ckpt.exists() and best_ckpt != resume_ckpt:
+            best_ckpt_data = torch.load(str(best_ckpt), map_location="cpu", weights_only=False)
+            trainer.best_eer = best_ckpt_data.get("best_eer", best_ckpt_data.get("dev_eer", float("inf")))
+        else:
+            trainer.best_eer = ckpt.get("best_eer", ckpt.get("dev_eer", float("inf")))
+
+        # Bug 2 fix: restore since_improve from resume_ckpt
+        trainer._since_improve = ckpt.get("since_improve", 0)
+        if "since_improve" not in ckpt:
+            logger.warning("checkpoint lacks since_improve; resetting to 0 (approximate)")
+
+        logger.info(
+            "resuming from %s: epoch=%d, best_eer=%.4f (from %s), since_improve=%d",
+            resume_ckpt.name, start_epoch - 1,
+            trainer.best_eer,
+            best_ckpt.name if (best_ckpt.exists() and best_ckpt != resume_ckpt) else resume_ckpt.name,
+            trainer._since_improve,
+        )
+
+    # Allow explicit start_epoch override from config (e.g. ++train.start_epoch=N from CLI)
+    # Take the max so we never go backward relative to the checkpoint.
+    cfg_start = cfg["train"].get("start_epoch", 0)
+    if cfg_start and cfg_start > start_epoch:
+        logger.info("train.start_epoch override: %d (was %d from checkpoint)", cfg_start, start_epoch)
+        start_epoch = cfg_start
+
+    best = trainer.train(start_epoch=start_epoch)
+    logger.info("training done. best dev EER = %.4f", best)
+    return best
+
+
+@hydra.main(version_base=None, config_path="../../../config", config_name="config")
+def main(cfg: DictConfig):
+    run(cfg)
+
+
+if __name__ == "__main__":
+    main()

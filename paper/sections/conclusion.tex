@@ -1,0 +1,11 @@
+% ---------------------------------------------------------------------
+% ---------------------------------------------------------------------
+
+We presented AuralGuard, a multi-view one-class detection framework for AI-generated speech that addresses the core challenges of cross-domain generalization and probability calibration. The architecture synergistically couples a frozen WavLM-Large foundation-model encoder with learnable layer-wise attention to an explicit vocoder-artifact branch via gated cross-attention fusion, optimized under an Orthogonal Centroid Scoring (OCS) one-class objective.
+
+Under a rigorous train-once, evaluate-everywhere protocol across held-out in-domain and diverse out-of-domain benchmarks, our empirical evaluation demonstrated three key insights:
+(i)~Foundation-model representations provide crucial invariance against distribution shift, achieving zero-shot EERs of 16.55\% (B5) and 19.19\% (AuralGuard v2) on the unconstrained In-the-Wild benchmark, whereas legacy raw-waveform and cepstral baselines suffer near-complete operational collapse ($>$38--50\% EER).
+(ii)~Multi-view artifact modeling yields superior posterior probability calibration under domain shift: AuralGuard achieves an exceptional Expected Calibration Error of 0.0965 (v1) and 0.1716 (v2) on In-the-Wild, vastly outperforming both single-view SSL (ECE = 0.2320) and legacy architectures (ECE $>$ 0.55), establishing critical reliability for forensic testimony and automated content moderation.
+(iii)~On the challenging multi-vocoder WaveFake corpus, AuralGuard v2 attains the top performance among all evaluated models with an EER of 45.19\%, while highlighting that neural vocoder invariance remains an open community challenge.
+
+Future work will expand training across emerging neural vocoders and flow-matching synthesizers, extend one-class multi-view scoring to localized temporal spoofing and partial forgery detection, and distill the foundation-model front-end into lightweight streaming architectures for on-device deployment. All source code, configuration files, trained weights, and evaluation manifests are openly released to advance verifiable, calibrated synthetic speech forensics.

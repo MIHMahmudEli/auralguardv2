@@ -1,0 +1,26 @@
+# @package _global_
+# AuralGuard v2 — applies all Phase 1+2 fixes:
+#   1. Fusion residual bug fix (fa outside LayerNorm)
+#   2. SupCon re-enabled as bona-fide-only (no OCSoftmax conflict)
+#   3. ArtifactFrontend curriculum freeze (5 epochs)
+#   4. 3-group optimizer (ssl_lr / artifact_lr / main lr)
+#   5. STFT dedup in spectral.py
+#
+# Usage: python scripts/train.py experiment=auralguard_v2
+defaults:
+  - override /model: auralguard_v2
+  - override /data: asvspoof2019_la
+  - override /train: default
+
+experiment_name: auralguard_v2
+
+# Override train-level params for the v2 run
+train:
+  artifact_unfreeze_epoch: 5       # freeze artifact frontend for 5 epochs
+  optimizer:
+    artifact_lr: 1.0e-5            # dedicated LR for artifact + fusion modules
+  hf_upload:
+    enabled: true
+    repo: "MoshinAli/auralguard-checkpoints"
+    token: null                    # reads HF_TOKEN / HF from .env
+    upload_every_n_epochs: 5       # upload every 5 epochs + always on best

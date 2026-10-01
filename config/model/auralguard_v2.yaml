@@ -1,0 +1,45 @@
+# @package model
+# AuralGuard v2 — fixed multi-view model.
+# Changes vs v1:
+#   - SupCon disabled (conflicted with OCSoftmax) -> re-enabled as bona-fide-only
+#   - layer_entropy_reg reduced 0.01 -> 0.005
+#   - artifact_lr + artifact_unfreeze_epoch wired in train config
+#   - fusion residual fixed (fa moved outside LayerNorm)
+#   - STFT computed once (dedup in spectral.py)
+name: auralguard
+
+frontend_ssl:
+  backbone: microsoft/wavlm-large
+  revision: main
+  finetune: last_k
+  finetune_last_k: 3
+  layer_attention: true
+  proj_dim: 128
+
+frontend_artifact:
+  enabled: true
+  features: [lfcc, mod_group_delay, cqt_phase]
+  lfcc: { n_lfcc: 60, n_fft: 512, hop: 160, win: 400 }
+  proj_dim: 128
+
+fusion:
+  type: gated_cross_attention
+  dim: 128
+  heads: 4
+
+backend:
+  type: aasist
+  gat_dims: [64, 32]
+  embed_dim: 160
+
+head:
+  type: oc_softmax
+  oc_softmax: { feat_dim: 160, m_real: 0.9, m_fake: 0.2, alpha: 20.0 }
+
+loss:
+  supcon:
+    enabled: true                  # re-enabled — now bona-fide-only (no OC conflict)
+    bona_fide_only: true           # only contract real speech; spoofs roam freely
+    weight: 0.2                    # reduced from 0.3 to be gentler
+    temperature: 0.1
+  layer_entropy_reg: 0.005         # reduced from 0.01

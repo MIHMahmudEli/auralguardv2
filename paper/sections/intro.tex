@@ -1,0 +1,100 @@
+% ---------------------------------------------------------------------
+% ---------------------------------------------------------------------
+
+\IEEEPARstart{T}{he} quality of AI-generated speech has crossed a perceptual
+threshold. Neural codec language models such as VALL-E~\cite{wang2023valle},
+diffusion- and flow-matching-based synthesizers such as StyleTTS~2~\cite{li2023styletts2}
+and F5-TTS~\cite{chen2024f5tts}, and massively multilingual zero-shot systems such as
+XTTS~\cite{casanova2024xtts}, Seed-TTS~\cite{anastassiou2024seedtts}, and
+CosyVoice~\cite{du2024cosyvoice} can now clone a speaker's voice from a few seconds of
+reference audio and synthesize speech that human listeners and conventional classifiers
+cannot reliably distinguish from genuine recordings. While these systems enable valuable
+applications in accessibility, dubbing, and creative production, they have also driven a
+sharp rise in documented harms: voice-cloning fraud against individuals and financial
+institutions, fabricated audio of political figures circulated during elections, and
+evasion of voice-biometric authentication. An analysis of deepfakes actually circulated
+online during 2024 found that audio deepfakes are among the fastest-growing and least
+reliably detected modalities~\cite{chandra2025deepfakeeval}, and large-scale fake-speech
+corpora are now being generated with large language models in the loop to simulate
+disinformation campaigns~\cite{luong2024llamapartialspoof}.
+
+The anti-spoofing community has responded with increasingly capable countermeasures.
+On the standard ASVspoof~2019 Logical Access (LA) benchmark~\cite{wang2020asvspoof2019},
+systems built on self-supervised learning (SSL) speech foundation models with
+graph-attention back-ends~\cite{tak2022automatic,jung2022aasist} achieve equal error
+rates (EER) below 1\%, and recent state-space-model
+detectors~\cite{xiao2025xlsrmamba,chen2024rawbmamba} and lightweight foundation-model
+back-ends~\cite{liu2025nes2net} have pushed in-domain accuracy further still. Yet a
+growing body of evidence---from the ASVspoof~5 challenge~\cite{wang2024asvspoof5,
+wang2025asvspoof5journal} to systematic cross-domain
+studies~\cite{muller2022inthewild,muller2024harder}---shows that these in-domain numbers
+are a poor predictor of real-world reliability. We identify three failure modes that
+jointly block deployment.
+
+\textbf{G1---Generalization to unseen generators.} A detector trained on a fixed set of
+text-to-speech (TTS) and voice-conversion (VC) algorithms sees its EER degrade from
+below 1\% to 5--30\% when evaluated on synthesizers absent from its training
+corpus~\cite{muller2022inthewild,muller2024harder}. Because new synthesis families
+appear monthly---neural codec language models and flow-matching synthesizers did not
+exist when the dominant training corpora were collected---a practical detector must
+generalize \emph{zero-shot}, without retraining, to generator families it has never
+seen. The Codecfake study~\cite{xie2025codecfake} demonstrates that detectors trained on
+conventional vocoder artifacts largely fail on speech produced through neural audio
+codecs, precisely the mechanism used by the newest generation of synthesizers.
+
+\textbf{G2---Channel robustness.} Real-world audio reaches a detector after lossy
+compression (MP3, AAC, Opus), telephony coding (AMR, G.711), reverberation, and additive
+noise---conditions imposed by messaging platforms, social media transcoding, and phone
+networks. The ASVspoof~2021 evaluation~\cite{liu2023asvspoof2021} showed that codec and
+compression variability alone can multiply EER several-fold, and the interaction of
+channel distortion with spoofing artifacts remains poorly understood. Most published
+evaluations still use clean, studio-quality audio.
+
+\textbf{G3---Calibration and explainability.} Detection scores feed downstream
+decisions---content moderation, forensic analysis, legal evidence---that require
+\emph{calibrated} confidence estimates, not merely a ranking. Recent work shows that
+modern SSL-based detectors are systematically over-confident, particularly under domain
+shift~\cite{pascu2024calibrated}. Forensic practice additionally demands interpretable
+evidence for individual decisions, which binary scores do not provide.
+
+Recent large audio-language models (ALLMs) such as Qwen2-Audio~\cite{chu2024qwen2audio}
+and SALMONN~\cite{tang2024salmonn} raise a natural question: does the general-purpose
+audio understanding of foundation models subsume the deepfake-detection task? Early
+evidence suggests not---prompted zero-shot, ALLMs perform near chance at distinguishing
+bona-fide from synthetic speech~\cite{gong2025allm4add}---but no prior work has placed
+ALLMs and specialized countermeasures side by side within a controlled cross-domain,
+channel-robustness, and calibration protocol. We do so here.
+
+This paper reframes synthetic-speech detection from closed-set binary classification to
+\emph{open-set, channel-robust, calibrated} detection, and proposes
+\textbf{AuralGuard}, a multi-view one-class detection framework addressing G1--G3
+jointly. AuralGuard rests on four design decisions. \emph{First}, it fuses two
+complementary views of the input: View~A, a self-supervised foundation-model
+representation (WavLM-Large~\cite{chen2022wavlm}) with \emph{learnable layer attention}
+that adaptively selects the transformer depths most informative for artifact detection;
+and View~B, a hand-crafted feature stream that explicitly exposes low-level vocoder
+artifacts through linear-frequency cepstral coefficients (LFCC), modified group delay,
+and constant-Q phase---cues that SSL models, pre-trained for semantic tasks, are prone
+to discard. \emph{Second}, a gated cross-attention module fuses the two views before a
+spectro-temporal graph-attention back-end~\cite{jung2022aasist} produces an
+utterance-level embedding. \emph{Third}, a one-class contrastive objective combining
+OC-Softmax~\cite{zhang2021oneclass} with a supervised-contrastive
+auxiliary~\cite{khosla2020supcon} learns a compact decision region around bona-fide
+speech, so that unseen spoofing algorithms are rejected as out-of-distribution rather
+than mapped onto decision boundaries fit to known attacks. \emph{Fourth}, a
+channel-robustness augmentation curriculum---RawBoost~\cite{tak2022rawboost}, a
+realistic codec chain (MP3, AAC, Opus, AMR, G.711), measured room impulse responses,
+and additive noise---aligns the training distribution with deployment channels.
+
+We evaluate AuralGuard under a strict train-once, evaluate-everywhere protocol: all models are trained exclusively on the ASVspoof~2019~LA training partition and evaluated without fine-tuning or adaptation on held-out in-domain (ASVspoof~2019~LA eval) and challenging out-of-domain zero-shot corpora: In-the-Wild~\cite{muller2022inthewild} (probing real-world web audio and transmission noise) and WaveFake~\cite{frank2021wavefake} (probing unseen neural vocoders). Baselines span four generations of countermeasure design: hand-crafted features with light CNNs (LFCC-LCNN)~\cite{lavrentyeva2019stc}, end-to-end raw-waveform networks (RawNet2)~\cite{tak2021rawnet2}, graph-attention architectures (AASIST)~\cite{jung2022aasist}, and SSL-based foundation-model detectors with one-class scoring (WavLM+AASIST+OCS)~\cite{chen2022wavlm,zhang2021oneclass}. Beyond primary EER and minimum tandem detection cost (min~t-DCF)~\cite{kinnunen2020tdcf}, we report 95\% bootstrap confidence intervals, AUROC, balanced accuracy, F1-scores, expected calibration error (ECE), and Brier scores to assess forensic reliability under distribution shift~\cite{oyucu2026generalization,nagar2026hybrid}.
+
+The contributions of this work are as follows:
+\begin{enumerate}
+    \item \textbf{Multi-View Architecture.} AuralGuard, a novel detection framework that unifies an adaptive SSL foundation-model stream (WavLM-Large with learnable layer attention and entropy regularization) with an explicit low-level vocoder-artifact branch (LFCC, modified group delay, and CQT phase) via gated cross-attention fusion and a spectro-temporal graph back-end (Section~\ref{sec:method}).
+    \item \textbf{One-Class Optimization.} An Orthogonal Centroid Scoring (OCS) one-class training objective that tightly bounds the bona-fide speech manifold, enabling robust rejection of unseen synthesis artifacts as out-of-distribution outliers without overfitting to training-set artifacts (Section~\ref{ssec:objective}).
+    \item \textbf{Comprehensive Generational Benchmark.} A controlled empirical comparison of six models spanning four architectural generations under identical training data, feature extractors, and evaluation protocols across in-domain and zero-shot cross-corpus shifts (Section~\ref{ssec:generalization}).
+    \item \textbf{Superior Probability Calibration.} Demonstration that multi-view one-class learning yields superior probability calibration under severe domain shift, achieving an In-the-Wild ECE of 0.0965 (v1) and 0.1716 (v2) compared to 0.2320 for single-view WavLM+OCS and $>$0.55 for legacy end-to-end networks, providing trustworthy reliability for forensic applications (Section~\ref{ssec:calibration}).
+    \item \textbf{Open Reproducibility.} Complete source code, configuration files, trained model checkpoints, and evaluation artifacts are publicly released at GitHub (\url{https://github.com/MIHMahmudEli/auralguardv2}) and Hugging Face (\url{https://huggingface.co/MoshinAli/auralguard-checkpoints}) to support reproducible research in synthetic speech forensics.
+\end{enumerate}
+
+The remainder of the paper is organized as follows. Section~\ref{sec:related} reviews countermeasure architectures, speech foundation models, one-class learning, and recent cross-domain generalization studies. Section~\ref{sec:method} details the AuralGuard architecture, dual-branch feature representations, fusion, and optimization objective. Section~\ref{sec:setup} describes datasets, baselines, implementation details, and evaluation metrics. Section~\ref{sec:results} presents in-domain performance, zero-shot generalization, calibration analysis, and computational efficiency. Section~\ref{sec:discussion} discusses practical implications, limitations, and ethical considerations, and Section~\ref{sec:conclusion} concludes.
