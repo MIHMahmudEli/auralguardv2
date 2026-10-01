@@ -4,7 +4,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.x-red)](https://pytorch.org/)
 [![Hugging Face Models](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Checkpoints-yellow)](https://huggingface.co/MoshinAli/auralguard-checkpoints)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Paper PDF](https://img.shields.io/badge/paper-17%20pages%20(Camera--Ready)-purple)](paper/main.pdf)
+[![Status](https://img.shields.io/badge/status-under%20review-blue)]()
 
 > **Official repository for the journal manuscript:**  
 > *"AuralGuard: Multi-View One-Class Learning for Generalizable and Calibrated Detection of AI-Generated Speech in the Wild"*  
@@ -78,15 +78,6 @@ auralguardv2/
 │   ├── evaluate.py         # Cross-dataset benchmark evaluator
 │   ├── plot_paper_figures.py # Vector figure plotting suite
 │   └── generate_real_paper_figures.py # Empirical figure generation from HF metrics
-├── paper/                  # Camera-Ready LaTeX Manuscript (17 pages, Q1 standard)
-│   ├── main.tex            # Master LaTeX entry point
-│   ├── main.pdf            # Compiled camera-ready PDF
-│   ├── sections/           # Modular section files (intro, related, method, setup, results, discussion, conclusion)
-│   ├── figures/            # Vector PDF figures (DET curves, forest plots, calibration)
-│   ├── references.bib      # 69 peer-reviewed citations (predominantly 2024–2026)
-│   ├── COVER_LETTER.md     # Formal submission letter to Editor-in-Chief
-│   ├── HIGHLIGHTS.md       # Research highlights (Elsevier <= 85 char format)
-│   └── SUGGESTED_REVIEWERS.md # Independent international experts in audio anti-spoofing
 ├── experiments/            # Benchmark matrices and evaluation results
 │   ├── RESULT_CONSISTENCY_MATRIX.md # Verified results consistency documentation
 │   └── results/            # Raw JSON evaluation metrics
@@ -94,6 +85,7 @@ auralguardv2/
 ├── requirements.txt        # Python dependency manifest
 └── LICENSE                 # Open-source MIT License
 ```
+*(Note: Manuscript source files and submission metadata are maintained privately during peer review and will be released upon acceptance).*
 
 ---
 

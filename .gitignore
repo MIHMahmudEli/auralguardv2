@@ -61,21 +61,8 @@ Thumbs.db
 .idea/
 .vscode/
 
-# LaTeX build artifacts
-paper/*.aux
-paper/*.bbl
-paper/*.blg
-paper/*.log
-paper/*.out
-paper/*.fls
-paper/*.fdb_latexmk
-paper/*.synctex.gz
-paper/*.lof
-paper/*.lot
-paper/*.toc
-paper/figures/*.png
+# Private paper manuscript & submission files (keep confidential prior to publication)
+paper/
 
-# Keep camera-ready PDF, manifests and small figures
-!paper/main.pdf
+# Keep data manifests
 !data/manifests/
-!paper/figures/*.pdf
