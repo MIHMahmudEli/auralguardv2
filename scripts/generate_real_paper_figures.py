@@ -132,7 +132,16 @@ def make_cross_domain_comparison():
     ax.set_axisbelow(True)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
-    ax.legend(loc="upper left", ncol=3, frameon=False, borderaxespad=0.2, handlelength=1.4)
+    ax.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.16),
+        ncol=6,
+        frameon=False,
+        fontsize=6.5,
+        handlelength=1.1,
+        handletextpad=0.3,
+        columnspacing=0.8,
+    )
 
     fig.tight_layout(pad=0.3)
     out = FIG_DIR / "cross_domain_comparison.pdf"
