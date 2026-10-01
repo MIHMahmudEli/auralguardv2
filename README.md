@@ -28,10 +28,10 @@ Modern neural speech synthesizers, diffusion vocoders, and neural codec language
 ### 🎯 Research Questions
 
 This study systematically addresses four core research questions:
-1. **RQ1 (Cross-Corpus Generalization):** Can a multi-view countermeasure trained strictly on clean in-domain speech (ASVspoof 2019 LA) generalize zero-shot to unconstrained web audio (In-the-Wild) and multi-vocoder synthesis (WaveFake) without catastrophic performance collapse?
-2. **RQ2 (Forensic Probability Calibration):** Does an open-set one-class hyperspherical objective (OC-Softmax with SupCon) produce well-calibrated posterior probability estimates and bounded confidence intervals under severe acoustic distribution shift?
-3. **RQ3 (Multi-View Feature Complementarity):** What are the complementary roles of semantic foundation representations (WavLM) and physical phase artifacts (LFCC, MGD, CQT phase) when exposed to lossy transmission codecs and diverse vocoders?
-4. **RQ4 (Parameter Efficiency & Operational Feasibility):** Can competitive zero-shot discrimination and legal-grade calibration be sustained while keeping the 315M foundation backbone frozen (1.4% trainable parameters) at real-time speeds?
+- **RQ1 (Cross-Corpus Generalization):** Can a multi-view countermeasure trained strictly on clean in-domain speech (ASVspoof 2019 LA) generalize zero-shot to unconstrained web audio (In-the-Wild) and multi-vocoder synthesis (WaveFake) without catastrophic performance collapse?
+- **RQ2 (Forensic Probability Calibration):** Does an open-set one-class hyperspherical objective (OC-Softmax with SupCon) produce well-calibrated posterior probability estimates and bounded confidence intervals under severe acoustic distribution shift?
+- **RQ3 (Multi-View Feature Complementarity):** What are the complementary roles of semantic foundation representations (WavLM) and physical phase artifacts (LFCC, MGD, CQT phase) when exposed to lossy transmission codecs and diverse vocoders?
+- **RQ4 (Parameter Efficiency & Operational Feasibility):** Can competitive zero-shot discrimination and legal-grade calibration be sustained while keeping the 315M foundation backbone frozen (1.4% trainable parameters) at real-time speeds?
 
 ---
 
