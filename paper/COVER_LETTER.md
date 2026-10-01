@@ -15,6 +15,13 @@ Recent advances in generative speech synthesis (diffusion vocoders, flow-matchin
 1. **Catastrophic Out-of-Domain Collapse:** Traditional acoustic models (e.g., LFCC-LCNN, RawNet2) degrade to near-chance discrimination (38–50% EER) on unconstrained audio found "in the wild".
 2. **Severe Probability Miscalibration:** Existing deep learning classifiers output overconfident false-alarm probabilities under acoustic domain shift (Expected Calibration Error exceeding 0.55), rendering their predictions legally inadmissible and dangerous in biometric authentication and judicial proceedings (e.g., under the *Daubert* standard and Article 50 of the EU AI Act).
 
+### Research Questions Addressed
+This investigation is systematically structured around four foundational scientific questions:
+- **RQ1 (Cross-Corpus Generalization):** Can a multi-view countermeasure trained strictly on clean in-domain speech (ASVspoof 2019 LA) generalize zero-shot to unconstrained web audio (In-the-Wild) and multi-vocoder synthesis (WaveFake) without catastrophic collapse?
+- **RQ2 (Forensic Decision Calibration):** Does an open-set one-class hyperspherical objective (OC-Softmax with SupCon) produce well-calibrated posterior probabilities and non-parametric bootstrap confidence intervals under severe acoustic shift?
+- **RQ3 (Multi-View Feature Complementarity):** What are the complementary roles of semantic foundation representations (WavLM) and physical phase artifacts (LFCC, MGD, CQT phase) when exposed to lossy transmission codecs and diverse vocoders?
+- **RQ4 (Parameter Efficiency & Feasibility):** Can competitive zero-shot discrimination and forensic calibration be achieved while keeping the 315M foundation backbone frozen (1.4% trainable parameters) at real-time operating speeds?
+
 ### Key Contributions
 In this manuscript, we present **AuralGuard**, an open-set multi-view framework designed specifically for generalizable and calibrated audio deepfake detection:
 - **Multi-View Complementary Architecture:** We combine a frozen 315M self-supervised foundation-model front-end (WavLM-Large with learnable multi-layer attention) with an explicit 1.12M physical artifact stream capturing Linear Frequency Cepstral Coefficients (LFCC), Modified Group Delay (MGD), and Constant-Q Transform (CQT) phase derivatives.

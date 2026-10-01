@@ -3,13 +3,12 @@
 % Rigorous empirical analysis using verified experimental outputs.
 % ---------------------------------------------------------------------
 
-We evaluate AuralGuard and the baseline architectures across three distinct evaluation corpora under the strict train-once (ASVspoof~2019~LA) evaluate-everywhere protocol. Our investigation is structured around five core forensic questions:
+We evaluate AuralGuard and the baseline architectures across three distinct evaluation corpora under the strict train-once (ASVspoof~2019~LA) evaluate-everywhere protocol. Our empirical analysis directly addresses the four research questions established in Section~\ref{sec:intro}:
 \begin{enumerate}
-    \item \textbf{Generalization Trajectory:} How do different countermeasure generations transfer from constrained in-domain training to unconstrained, real-world audio in the wild (Section~\ref{ssec:generalization})?
-    \item \textbf{Statistical Significance:} Are the performance differentials between foundation-model representations, multi-view architectures, and legacy baselines statistically verifiable under non-parametric bootstrap resampling (Section~\ref{ssec:significance})?
-    \item \textbf{Forensic Calibration:} Do predicted posterior probabilities remain trustworthy and well-calibrated when deployed zero-shot outside the training distribution (Section~\ref{ssec:calibration})?
-    \item \textbf{Vocoder Invariance:} Why do current state-of-the-art architectures degrade on unseen neural vocoder architectures, and how does explicit phase modeling mitigate this degradation (Section~\ref{ssec:wavefake})?
-    \item \textbf{Operational Deployment:} How do the systems perform under strict forensic operating regimes ($P_{\text{fa}} \le 1\%$), and what is their practical computational complexity (Section~\ref{ssec:operational} and Section~\ref{ssec:budget-analysis})?
+    \item \textbf{RQ1 (Cross-Corpus Generalization):} How do different countermeasure generations transfer from constrained in-domain training to unconstrained web audio (In-the-Wild) and multi-vocoder synthesis (WaveFake), and are the differences statistically significant (Section~\ref{ssec:generalization} and Section~\ref{ssec:significance})?
+    \item \textbf{RQ2 (Forensic Calibration and Uncertainty):} Do predicted posterior probabilities remain trustworthy and well-calibrated under severe zero-shot domain shift, and how do confidence intervals behave (Section~\ref{ssec:calibration})?
+    \item \textbf{RQ3 (Multi-View Synergy and Vocoder Artifacts):} Why do current architectures degrade on unseen neural vocoders, and how does explicit phase artifact modeling provide complementary defense (Section~\ref{ssec:wavefake})?
+    \item \textbf{RQ4 (Parameter Efficiency and Operational Feasibility):} How do the systems perform under strict forensic operating regimes ($P_{\text{fa}} \le 1\%$), and what is their practical computational complexity (Section~\ref{ssec:operational} and Section~\ref{ssec:budget-analysis})?
 \end{enumerate}
 
 \subsection{In-Domain Performance and Cross-Domain Generalization}

@@ -25,6 +25,14 @@ Modern neural speech synthesizers, diffusion vocoders, and neural codec language
 - **Spectro-Temporal Graph Back-End:** Projects fused representations into an AASIST graph-attention network (GATv2) optimized under an Orthogonal Centroid Scoring (OCS) one-class objective with Supervised Contrastive regularization.
 - **Parameter Efficiency:** The 315M WavLM backbone remains completely frozen; only **4.49M parameters (1.4% of total capacity)** are trained, enabling rapid convergence and low inference latency ($\text{RTF} = 0.058$ on GPU, $0.412$ on CPU).
 
+### 🎯 Research Questions
+
+This study systematically addresses four core research questions:
+1. **RQ1 (Cross-Corpus Generalization):** Can a multi-view countermeasure trained strictly on clean in-domain speech (ASVspoof 2019 LA) generalize zero-shot to unconstrained web audio (In-the-Wild) and multi-vocoder synthesis (WaveFake) without catastrophic performance collapse?
+2. **RQ2 (Forensic Probability Calibration):** Does an open-set one-class hyperspherical objective (OC-Softmax with SupCon) produce well-calibrated posterior probability estimates and bounded confidence intervals under severe acoustic distribution shift?
+3. **RQ3 (Multi-View Feature Complementarity):** What are the complementary roles of semantic foundation representations (WavLM) and physical phase artifacts (LFCC, MGD, CQT phase) when exposed to lossy transmission codecs and diverse vocoders?
+4. **RQ4 (Parameter Efficiency & Operational Feasibility):** Can competitive zero-shot discrimination and legal-grade calibration be sustained while keeping the 315M foundation backbone frozen (1.4% trainable parameters) at real-time speeds?
+
 ---
 
 ## 📊 Master Empirical Benchmark Results
