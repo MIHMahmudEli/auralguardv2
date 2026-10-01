@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -152,7 +153,44 @@ def make_cross_domain_comparison():
 
 def make_calibration_vs_discrimination():
     """Scatter plot: AUROC vs Calibration Quality (1 - ECE) on In-the-Wild."""
-    fig, ax = plt.subplots(figsize=(3.4, 2.7))
+    fig, ax = plt.subplots(figsize=(3.5, 2.85))
+
+    # Shaded optimal quadrant: AUROC >= 0.80 and (1 - ECE) >= 0.80
+    rect = Rectangle((0.80, 0.80), 0.25, 0.30, facecolor="#0072B2", alpha=0.07, zorder=0)
+    ax.add_patch(rect)
+
+    # Threshold lines
+    ax.axvline(0.80, color="#777777", linestyle="--", linewidth=0.75, alpha=0.75, zorder=1)
+    ax.axhline(0.80, color="#777777", linestyle="--", linewidth=0.75, alpha=0.75, zorder=1)
+
+    # Quadrant banner
+    ax.text(
+        0.99, 1.045, "Optimal Operational Regime\n(High Disc. & High Cal.)",
+        fontsize=6.5, color="#004b87", style="italic", weight="bold",
+        ha="right", va="top", zorder=2,
+        linespacing=1.2
+    )
+
+    label_configs = {
+        "B1 (LFCC-LCNN)": {
+            "offset": (9, 0), "ha": "left", "va": "center", "bold": False, "mask": False
+        },
+        "B2 (RawNet2)": {
+            "offset": (9, -6), "ha": "left", "va": "top", "bold": False, "mask": False
+        },
+        "B3 (AASIST)": {
+            "offset": (-9, 8), "ha": "right", "va": "bottom", "bold": False, "mask": False
+        },
+        "B5 (WavLM+OCS)": {
+            "offset": (9, -4), "ha": "left", "va": "top", "bold": False, "mask": False
+        },
+        "AuralGuard (v1)": {
+            "offset": (-10, -6), "ha": "right", "va": "top", "bold": True, "mask": True
+        },
+        "AuralGuard v2": {
+            "offset": (9, 6), "ha": "left", "va": "bottom", "bold": True, "mask": False
+        },
+    }
 
     for model in MODELS:
         itw_data = METRICS[model]["ITW"]
@@ -161,7 +199,7 @@ def make_calibration_vs_discrimination():
         cal_score = 1.0 - ece
 
         marker = "D" if "AuralGuard" in model else ("s" if "B5" in model else "o")
-        size = 65 if "AuralGuard" in model else 45
+        size = 85 if "AuralGuard" in model else (65 if "B5" in model else 55)
 
         ax.scatter(
             auroc,
@@ -170,59 +208,42 @@ def make_calibration_vs_discrimination():
             s=size,
             marker=marker,
             edgecolors="black",
-            linewidths=0.5,
+            linewidths=0.7,
             zorder=4,
-            label=model,
         )
 
-        # Annotate labels with offset to avoid collisions
-        dx, dy = 0.015, -0.02
-        if "AuralGuard (v1)" in model:
-            dx, dy = -0.16, 0.02
-        elif "AuralGuard v2" in model:
-            dx, dy = -0.15, -0.04
-        elif "B5" in model:
-            dx, dy = -0.14, 0.02
-        elif "B1" in model:
-            dx, dy = 0.02, 0.01
-        elif "B2" in model:
-            dx, dy = 0.02, 0.01
-        elif "B3" in model:
-            dx, dy = -0.05, -0.04
-
+        cfg = label_configs[model]
+        bbox = dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85) if cfg["mask"] else None
         ax.annotate(
-            model.split()[0],
+            model,
             (auroc, cal_score),
+            xytext=cfg["offset"],
             textcoords="offset points",
-            xytext=(dx * 100, dy * 100),
-            fontsize=6,
-            fontweight="bold" if "AuralGuard" in model else "normal",
-            color=COLORS[model],
+            fontsize=6.8,
+            fontweight="bold" if cfg["bold"] else "normal",
+            color=COLORS[model] if cfg["bold"] else "#222222",
+            ha=cfg["ha"],
+            va=cfg["va"],
+            zorder=5,
+            bbox=bbox,
         )
-
-    # Highlight ideal quadrant
-    ax.axvline(0.80, color="0.75", linestyle=":", linewidth=0.6, zorder=1)
-    ax.axhline(0.80, color="0.75", linestyle=":", linewidth=0.6, zorder=1)
-    ax.text(
-        0.81, 0.94, "High Discrimination &\nHigh Calibration",
-        fontsize=5.5, color="#0072B2", style="italic", zorder=2
-    )
 
     ax.set_xlabel("Discrimination on In-the-Wild (AUROC)")
-    ax.set_ylabel("Calibration Quality ($1 - \\mathrm{ECE}$)")
-    ax.set_xlim(0.45, 0.96)
-    ax.set_ylim(0.35, 0.98)
-    ax.grid(True, color="0.88", zorder=0)
+    ax.set_ylabel(r"Probability Calibration Quality ($1 - \mathrm{ECE}$)")
+    ax.set_xlim(0.44, 1.02)
+    ax.set_ylim(0.35, 1.06)
+    ax.grid(True, color="0.90", linestyle="-", linewidth=0.5, zorder=0)
     ax.set_axisbelow(True)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
-    ax.legend(loc="lower left", frameon=False, fontsize=5.5, handletextpad=0.2, borderaxespad=0.2)
 
-    fig.tight_layout(pad=0.3)
-    out = FIG_DIR / "calibration_vs_discrimination.pdf"
-    fig.savefig(out, bbox_inches="tight")
+    fig.tight_layout(pad=0.4)
+    out_pdf = FIG_DIR / "calibration_vs_discrimination.pdf"
+    out_png = FIG_DIR / "calibration_vs_discrimination.png"
+    fig.savefig(out_pdf, bbox_inches="tight")
+    fig.savefig(out_png, dpi=300, bbox_inches="tight")
     plt.close(fig)
-    print(f"wrote {out}")
+    print(f"wrote {out_pdf} and {out_png}")
 
 
 def make_ci_forest_plot():
