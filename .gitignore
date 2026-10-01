@@ -73,6 +73,7 @@ paper/*.synctex.gz
 paper/*.lof
 paper/*.lot
 paper/*.toc
+paper/figures/*.png
 
 # Keep camera-ready PDF, manifests and small figures
 !paper/main.pdf
